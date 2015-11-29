@@ -34,22 +34,22 @@
     if (selector) $stickyFooter.add(selector);
 
     if ($stickyFooter.length) {
-      var footerHeight = 0,
-        bodyHeight = 0,
-        vwptHeight = 0,
-        wrapperHeight = 0,
-        $body = $('body'),
-        $mainwrapper = $('.main-wrapper');
+      var footerHeight = 0;
+      var bodyHeight = 0;
+      var vwptHeight = 0;
+      var wrapperHeight = 0;
+      var $body = $('body');
+      var $mainwrapper = $('.main-wrapper');
 
       PROJECTNAME.Functions.positionFooter = function() {
-          $mainwrapper.css('min-height', 0);
-          footerHeight = $stickyFooter.outerHeight();
-          bodyHeight = $body.height();
-          vwptHeight = $(window).height();
-          wrapperHeight = $mainwrapper.height();
-          if (vwptHeight > bodyHeight) {
-            $mainwrapper.css('min-height', vwptHeight - footerHeight);
-          }
+        $mainwrapper.css('min-height', 0);
+        footerHeight = $stickyFooter.outerHeight();
+        bodyHeight = $body.height();
+        vwptHeight = $(window).height();
+        wrapperHeight = $mainwrapper.height();
+        if (vwptHeight > bodyHeight) {
+          $mainwrapper.css('min-height', vwptHeight - footerHeight);
+        }
       };
 
       PROJECTNAME.Functions.positionFooter();
@@ -110,8 +110,8 @@
     if (settings.selector) $linkPopup.add(settings.selector, settings.context);
 
     if ($linkPopup.length) {
-      var $mainContent = $('.main-content'),
-        $body = $('body');
+      var $mainContent = $('.main-content');
+      var $body = $('body');
       $mainContent.removeClass('popup-opened');
       $linkPopup.removeClass('is-active');
 
@@ -156,8 +156,8 @@
 
     if ($linkDropdown.length) {
       $('body').on('click','.link-dropdown, [PROJECTNAME-link-dropdown]', function(e) {
-        var $this = $(this),
-          $dDContainer = $this.parent();
+        var $this = $(this)
+        var  $dDContainer = $this.parent();
         if ($dDContainer.hasClass('is-opened')) {
           $dDContainer.removeClass('is-opened');
         } else {
@@ -338,5 +338,258 @@
     }
   }
 
+  /**
+   * Five stars rating
+   * add [PROJECTNAME-stars-rating] to star rating block
+   * add .star to rating button
+   */
+  PROJECTNAME.Behavior.ratingStars = function (settings) {
+    var $starsBlock = $('[PROJECTNAME-stars-rating]', settings.context);
+    if (settings.selector) $starsBlock.add(settings.selector, settings.context);
+
+    if ($starsBlock.length) {
+      var $iconSingle = $icon.eq(j);
+      var selectors = '[PROJECTNAME-stars-rating] .star'
+      if (settings.selector) {
+        selectors += ',' + settings.selector + ' .star';
+      }
+      $('body').on('mouseenter', selectors, function() {
+        var $this = $(this);
+        $this.addClass('icon-full').removeClass('icon-empty');
+        $this.prevAll('.icon').addClass('icon-full').removeClass('icon-empty');
+        $this.nextAll('.icon').addClass('icon-empty').removeClass('icon-full');
+      });
+
+      $('body').on('mouseleave', selectors, function() {
+        var $this = $(this);
+        $this.find('.icon').removeClass('icon-full icon-empty');
+      });
+    }
+  }
+
+  /**
+   * Fix width or height.
+   * [PROJECTNAME-fix-size] behavior.
+   */
+  PROJECTNAME.Behavior.fixSize = function(settings) {
+    var $fixSizeCols = $('[PROJECTNAME-fix-size]', settings.context);
+    if ($fixSizeCols.length) {
+      var $this = $();
+      window.fixSizerows = [];
+      var k = -1;
+
+      function getFixedLength(v, ind, rowsLength) {
+        if (!$fixSizeCols.eq(v).length) {
+          return 0;
+        }
+        var $ot = $fixSizeCols.eq(v).offset().top;
+        var $next = $fixSizeCols.eq(v + 1);
+
+        if (typeof ind == 'undefined') {
+          ind = 1;
+        }
+
+        if (typeof fixSizerows[rowsLength] == 'undefined') {
+          fixSizerows[rowsLength] = [];
+        }
+
+        if (!$next.length) {
+          var rL = fixSizerows[rowsLength];
+          if (rL[rL.length - 1] && rL[rL.length - 1].index() != $fixSizeCols.eq(v).index()) {
+              rL[rL.length] = $fixSizeCols.eq(v);
+          }
+          return 0;
+        }
+        if ($next.length) {
+          if ($next.offset().top == $ot) {
+            if (ind == 1) {
+                fixSizerows[rowsLength][0] = $fixSizeCols.eq(v);
+            }
+
+            fixSizerows[rowsLength][ind] = $next;
+            v = getFixedLength(v + 1, ind + 1, rowsLength);
+          } else {
+            if (ind == 1 && v == 0) {
+              fixSizerows[rowsLength][ind] = $next;
+              return getFixedLength(v + 1, ind, rowsLength);
+            }
+          }
+        }
+
+        return v;
+      }
+
+      function getMax(arr) {
+        var max = arr[0];
+        for (var i = 1, len = arr.length; i < len; i++) {
+            if (arr[i] > max) max = arr[i];
+        }
+        return max
+      }
+
+      function setHeight() {
+        for (var i = 0, len = fixSizerows.length; i < len; i++) {
+          var row = fixSizerows[i];
+          var heights = [];
+          var widths = [];
+          var heightmax = 0;
+          var widthmax = 0;
+          for (var j = 0, lenj = row.length; j < lenj; j++) {
+            if ($(row[j]).attr('PROJECTNAME-fix-size') == 'width') {
+              if ($(row[j]).is(":visible")) {
+                $(row[j]).width('auto');
+                widths[widths.length] = $(row[j]).width();
+              }
+            } else {
+              heights[heights.length] = $(row[j]).height();
+            }
+          }
+          heightmax = getMax(heights);
+          widthmax = getMax(widths);
+          var isMobile = getWindowWidth() < 767;
+          for (var j = 0, lenj = row.length; j < lenj; j++) {
+            if (typeof heightmax != 'undefined' && !isMobile) {
+              $(row[j]).height(heightmax);
+            }
+            if (typeof widthmax != 'undefined') {
+              $(row[j]).width(widthmax);
+            }
+          }
+        }
+      }
+      function startFixed() {
+        $fixSizeCols.css('height', 'auto');
+        fixSizerows = [];
+        k = -1;
+        while (k != 0) {
+            k = getFixedLength(k + 1, 1, fixSizerows.length);
+        }
+        setHeight();
+      }
+      // Check for height fixes on document ready.
+      startFixed();
+      $(window).resize(function() {
+        if (getWindowWidth() > 767) {
+          startFixed();
+        }
+      });
+    }
+  }
+
+  /**
+   * Scroll up button
+   * ex: .button-up
+   * ex: [PROJECTNAME-button-up]
+   */
+  PROJECTNAME.Behavior.scrollUp = function(settings) {
+    var $btnUp = $('.button-up', settings.context);
+    $btnUp.add('[PROJECTNAME-button-up]',settings.context);
+
+    if ($btnUp.length) {
+      $btnUp.click(function() {
+        $("html, body").animate({
+          scrollTop: 0
+        }, 600);
+        return false;
+      });
+      var btnT = $btnUp.offset().top;
+      var btnL = $btnUp.offset().left;
+      var fT = $('footer').offset().top;
+      var wH = $(window).height();
+
+      $(window).scroll(function () {
+        var dT = $(document).scrollTop();
+        if ((btnT - dT + 70) < wH) {
+          $btnUp.addClass('fixed').css({
+            bottom: 20,
+            left: btnL
+          });
+          if ((dT + wH + 30) > fT) {
+            $btnUp.css('bottom', (dT + wH + 70) - fT);
+          }
+        } else {
+          $btnUp.removeClass('fixed');
+        }
+      });
+    }
+  }
+
+  /**
+   * Fancybox initialisation
+   * ex. fancybox
+   */
+  PROJECTNAME.Behavior.fancyBoxInit = function(context) {
+    var $fancybox = $('.fancybox', context);
+    if ($fancybox.length) {
+      $fancybox.fancybox({
+        fitToView: false
+      });
+    }
+  }
+
+  /**
+   * Change attribute on click.
+   */
+  PROJECTNAME.Behavior.attributeChange = function(settings) {
+    var $attrTriggers = $('[PROJECTNAME-change-attr]', settings.context);
+    if ($attrTriggers.length) {
+      $attrTriggers.click(function(e) {
+        var $this = $(this);
+        var tabOptions = {};
+        var attrString = $this.attr('PROJECTNAME-change-attr').split(', ');
+        attrString.forEach(function(attrString) {
+          var tup = attrString.split(':');
+          tabOptions[tup[0]] = tup[1];
+        });
+        var el = tabOptions.el ? tabOptions.el : '';
+        var $el = $(el);
+        if ($el.length) {
+          var attr = tabOptions.attr ? tabOptions.attr : 'text';
+          var val = tabOptions.val ? tabOptions.val : '';
+          $el.attr(attr, val);
+        }
+      });
+    }
+  }
+
+  /**
+   * Smart forms behaviors
+   * TODO: вспомнить, что делает. добавить умные лейблы
+   */
+  PROJECTNAME.Behavior.smartForm = function(settings) {
+    var $form = $('form', settings.context);
+    $form.add('[PROJECTNAME-form]', settings.context);
+    if (settings.selector) $form.add(settings.selector, settings.context);
+
+    if ($form.length) {
+      $('form input[type="text"],form input[type="email"],form input[type="password"], formtextarea', settings.context).keyup(function(e) {
+        var $this = $(this);
+        if ($this.val().length) {
+          $this.removeClass('error');
+          if ($this.closest('form').hasClass('form-validate')) {
+            if (!$this.next().hasClass('input-label-name')) {
+              var lbl = '<span class="input-label-name">' + $this.attr('placeholder') + '</span>';
+              $(lbl).insertAfter($this);
+            }
+          }
+        } else {
+          $this.next('.input-label-name').remove();
+        }
+      });
+    }
+  }
+
+  /**
+   * Imagefill library
+   */
+  PROJECTNAME.Behavior.imageFillBg = function(settings) {
+    var $imageContainers = $('.imagefill', settings.context);
+    $imageContainers.add('[PROJECTNAME-imagefill]', settings.context);
+    if (settings.selector) $imageContainers.add(settings.selector, settings.context);
+
+    if ($imageContainers.length) {
+      $imageContainers.imagefill();
+    }
+  }
 
 })(jQuery)
