@@ -36,19 +36,37 @@ jQuery.fn.extend({
 /**
  * Default (base) behavior
  */
-PROJECTNAME.Behavior.default = function(context, selector) {
+PROJECTNAME.Behavior.default = function(settings) {
 	jQuery('html').removeClass('no-js');
 }
 
 /**
  * Execute all Behaviors.
  */
-PROJECTNAME.runBehaviors = function(context) {
-	if (typeof context == 'undefined') context = document;
+PROJECTNAME.runBehaviors = function(settings) {
+	if (typeof settings.context == 'undefined') settings.context = document;
 	var behaviors = Object.keys(PROJECTNAME.Behavior);
 	for (var i = 0, len = behaviors.length; i < len; i++) {
-		PROJECTNAME.Behavior[behaviors[i]](context);
+		PROJECTNAME.Behavior[behaviors[i]](settings);
 	}
+}
+
+/**
+ * Execute all Behaviors.
+ */
+PROJECTNAME.runBehavior = function(name, settings) {
+	var localSettings = {
+		context: document,
+		selector: ''
+	};
+	if (settings) {
+		for (var attrname in settings) {
+			localSettings[attrname] = settings[attrname];
+		}
+	} else {
+		settings = localSettings;
+	}
+	PROJECTNAME.Behavior[name[i]](settings);
 }
 
 /**
